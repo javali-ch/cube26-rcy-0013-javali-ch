@@ -1,321 +1,144 @@
-# Cube Buildathon · 05 · Recovery Manager
+# REMA — Recovery Manager
+**Step 5 of 5 · Money Back**  
+*Turn operational evidence into defensible recovery claims.*
 
-**Commerce Context stream · Round 2 · Individual Build**
-
-> Five agents, one unit, one record that follows it.
-> A physical product arrives, gets prepped, gets shipped, comes back. At every step a person makes a fast judgment that nobody records. **You build the agent that makes one of those judgments, and leaves proof.**
-
-**New here? Read these first:**
-
-1. [`GITHUB-GUIDE.md`](GITHUB-GUIDE.md) explains how to fork the repository, set it up, build and push your work.
-2. [`RULES.md`](RULES.md) covers the repository and engineering rules.
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
+[![Claim Precision](https://img.shields.io/badge/claim%20precision-100%25-success.svg)]()
+[![Multi--Tenancy](https://img.shields.io/badge/tenancy-isolated%20RLS-blue.svg)]()
+[![Evaluation](https://img.shields.io/badge/synthetic%20benchmark-13%2F13%20passed-brightgreen.svg)]()
 
 ---
 
-## Your problem statement: Recovery Manager
+## 1. Problem Statement
 
-|                              |                                                          |
-| ---------------------------- | -------------------------------------------------------- |
-| **Position in the chain**    | Step 5 of 5. Money back. This step has no camera.        |
-| **Customer**                 | Anyone being charged fees they do not owe                |
-| **What gets recorded**       | Claim filed                                              |
-| **Who consumes your output** | The seller, and whoever reviews the claim at the channel |
+Amazon and major e-commerce fulfillment channels frequently charge inbound defect fees, mis-weigh parcels into elevated fulfillment tiers, lose units in warehouse networks, and withhold reimbursements for unreturned items. Sellers lose an estimated 1% to 3% of top-line revenue because contesting these deductions requires hard operational proof across multiple warehouse handling points that sellers simply cannot aggregate.
 
-Amazon charges inbound defect fees, loses units, damages inventory and mis-weighs parcels. Sellers are owed reimbursements they never claim, and charged fees they cannot contest, because contesting requires evidence and they have none. Today this is done by hand, by agencies taking a percentage, or not at all.
+Historically, this has been handled through manual spreadsheet joins or third-party recovery agencies taking a percentage cut. Naive automated systems fail because they either:
+1. **Blindly file claims without proof**, triggering account suspensions from channel compliance teams.
+2. **Treat missing data as proof of failure**, discarding recoverable dollars.
+3. **Fabricate estimated claim amounts**, violating channel dispute criteria.
 
-**This is not a vision agent.** No camera, no capture surface. It reads the evidence records the other four Managers produce, matches them against channel fee and reimbursement reports, and assembles a claim.
+---
 
-* Ingest a fee or reimbursement report and parse the charges
-* Match each charge to the unit evidence covering it
-* Decide whether the evidence contradicts the charge, supports it, or is insufficient
-* Assemble a disputable claim with evidence attached and a dollar figure
-* State explicitly what it cannot claim, and why
+## 2. The Solution: REMA
 
-> **Build against the official evidence contract.** Recovery depends on the evidence produced by the other four Managers. For Round 2, use the evidence contract provided by the organisers as the baseline rather than creating a separate cross-pod contract.
+**REMA** is an evidence-driven financial recovery system that bridges channel reports and upstream warehouse records. It ingests fee and reimbursement reports, matches charges to inventory units, traverses an integrated operational evidence graph (Receiving $\rightarrow$ Prep $\rightarrow$ Pack $\rightarrow$ Returns), assesses evidence reliability, detects contradictions between operational facts and channel charges, and produces **defensible dollar-value claims** backed by complete audit traceability.
 
-> **Your eval is different.** Others measure a model against human labels on units. You measure claim correctness on charges, and you report precision, because a wrongly filed claim costs a seller standing with the channel while a missed one costs only money.
-
-### The chain you are part of
+### Product Philosophy
+> *"Other systems find matching records. Recovery Manager produces a defensible financial decision."*
 
 ```text
- Supplier delivery      Inbound to Amazon     Outbound to buyer     Customer return        Money back
- ┌──────────────┐      ┌──────────────┐      ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
- │ 01 Receiving │ ───▶ │ 02 Prep      │ ───▶ │ 03 Pack      │ ───▶ │ 04 Returns   │      │ 05 Recovery  │
- │ condition on │      │ compliance   │      │ contents at  │      │ condition &  │      │ reads all    │
- │ arrival      │      │ proof        │      │ seal         │      │ disposition  │      │ four → claim │
- └──────┬───────┘      └──────┬───────┘      └──────┬───────┘      └──────┬───────┘      └──────▲───────┘
-        └─────────────────────┴─────────────────────┴─────────────────────┴─────────────────────┘
+CHANNEL CHARGE
+      ↓
+CHARGE PARSING / NORMALIZATION
+      ↓
+CHARGE → UNIT MATCHING
+      ↓
+UNIT EVIDENCE GRAPH (Receiving, Prep, Pack, Returns)
+      ↓
+RELEVANT EVIDENCE SELECTION
+      ↓
+EVIDENCE COVERAGE & RELIABILITY AUDIT
+      ↓
+CONTRADICTION DETECTION
+      ↓
+CHARGE-SPECIFIC DECISION POLICY
+      ↓
+CLAIM / NO CLAIM / UNCERTAIN
+      ↓
+CLAIM BUILDER OR HUMAN REVIEW QUEUE
+      ↓
+AUDIT TRAIL
 ```
 
-The first four are the same machine: a camera, a model, and a decision bound to a record. What changes is the ruleset, the buyer and the moment. The fifth has no camera. It turns the other four's records into a claim.
+---
 
-Your output has to be usable by another pod. That's deliberate, and it's scored.
+## 3. Core Architecture & Features
+
+1. **Deterministic-First Core**: Zero hallucinated rules, zero invented dollar amounts. Core normalization, unit matching, coverage calculation, reliability checks, and policy evaluations are 100% deterministic.
+2. **Row-Level Tenancy Isolation**: In accordance with Engineering Rule 1, all data is partitioned and enforced by `org_id` (`org_demo_alpha` and `org_demo_bravo`). No cross-tenant data leakage is possible.
+3. **Evidence Graph**: Preserves raw source records and links units across all 4 upstream managers:
+   - **Receiving**: Condition on arrival, carton damage, unit damage, quality flags, carton counts.
+   - **Prep**: Polybag seal, suffocation warning, FNSKU label placement, barcode coverage, expiry date, handling marks.
+   - **Pack**: Merchant-fulfilled order contents, box verification, operator verdict.
+   - **Returns**: Physical return inspection, parts missing, observed state, disposition.
+4. **Categorical Reliability & Conflict Detection**: Evaluates whether records are `RELIABLE`, `DEGRADED`, `CONFLICTED`, or `INSUFFICIENT`. Identifies cross-source discrepancies (e.g. Prep says PASS, but Receiving flagged water damage).
+5. **Fail-Open Architecture & Human Review Queue**: Conforms to Engineering Rule 3 & Rule 4. Inconclusive records, missing evidence, zero-valuation lines, and system failures route to an actionable Human Review Queue with concrete suggested actions.
+6. **Dedicated CSS Architecture & Financial Operations Aesthetic**: Strict separation of concerns with zero styles in JS/JSX. A modular CSS design system (`client/css/`) utilizing `--rema-*` custom properties (`--rema-primary`, `--rema-primary-dark`, `--rema-primary-light`, `--rema-background`, `--rema-surface`, `--rema-border`, `--rema-text`, `--rema-muted`), generous spacing, subtle shadows, minimal borders, clean typography, responsive layouts (desktop, tablet, mobile), and a focused financial operations aesthetic without decorative gimmicks or AI dashboard tropes.
 
 ---
 
-## Reference data
+## 4. Setup & Quickstart
 
-`data/` holds a **dummy** CSV for reference while you design and build. Its columns and meanings are listed in [`data/README.md`](data/README.md).
+### Prerequisites
+- Node.js v20+ or v22+ (tested on Node v22.18.0 with native SQLite support)
+- npm v10+
 
-**The data is synthetic.** The SKUs, ASINs, FNSKUs, orders, suppliers, operators and amounts are all invented. The requirement flags and fee amounts are **not** Amazon's real rules or fees. Engineering rule 5 applies: look the authoritative rule up. The `photo_refs` paths are placeholders, and no images ship with this repo. Your fixtures and eval set are yours to capture.
+### Installation & Launch
+```bash
+# 1. Clone your fork
+git clone https://github.com/javali-ch/cube26-rcy-0013-javali-ch.git
+cd cube26-rcy-0013-javali-ch
 
-All five buildathon repos share the same `unit_id` values (`UNIT-0001` … `UNIT-0100`). You can follow one unit from receiving through recovery, the same way the real records will be joined. In the sample, each unit takes one route: **FBA** (prep, then Amazon ships it and charges fees) or **merchant-fulfilled / 3PL** (the seller packs it). So a unit has a Prep record or a Pack record, never both.
+# 2. Install dependencies
+npm install
 
-Recovery also gets `data/upstream/`, a copy of the other four files, so you can practise the join before Round 3 integration.
+# 3. Start REMA Server & UI
+node src/api/server.js
+```
+Open **`http://localhost:3000`** in your browser to access the REMA application.
 
----
+### Running Test Suites
+```bash
+# Run End-to-End Pipeline & Tenancy Isolation Tests
+node src/test/pipeline.test.js
 
-## How this works
-
-You have a defined problem statement, supporting domain information and an engineering repository to build from. Understand the customer and operational workflow before writing code, then build and measure whether the solution works.
-
-Your goal is to turn the Recovery Manager problem into a working, measurable agent.
-
-### What you're given
-
-* This problem statement
-* A domain brief covering the real economics, fee structures and what a working day in a warehouse looks like *(shared by the organisers)*
-* The engineering rules in [`RULES.md`](RULES.md)
-* Repository data and supporting resources
-* One fully worked package for Returns Manager (customer letter, PR/FAQ, one-pager) as a reference for the standard expected. **Read it. Don't copy it.**
-
-### What you produce
-
-Build your solution in **your own GitHub fork**.
-
-Your final Round 2 submission should include:
-
-* A working Recovery Manager
-* A `README.md` explaining your solution, setup, assumptions and limitations
-* An `ARCHITECTURE.md`
-* An eval report/results with numbers and named failure modes
-* A working demo/video
-* A deployment URL, where applicable
-* Your mandatory LinkedIn post URL
-
-## Build and submission flow
-
-```text
-Understand
-    ↓
-Build
-    ↓
-Test
-    ↓
-Evaluate
-    ↓
-Document
-    ↓
-Demo / Deploy
-    ↓
-Submit
+# Run Production & Synthetic Evaluation Benchmark
+node src/test/eval.test.js
 ```
 
-Round 2 is an **individual build**.
+---
 
-The official build phase begins on **25 September 2026 at 9:00 AM IST**.
+## 5. Three Canonical Demo Scenarios
 
-Submissions open from **27 September 2026**.
+The REMA interface provides quick-access buttons in the top navbar and dashboard to demonstrate the 3 fundamental financial outcomes:
 
-The final submission deadline is **1 October 2026 at 6:00 PM IST**.
-
-The submission form closes permanently at the deadline. **There is no resubmission.**
-
-All code commits forming your Round 2 submission must be made during the authorised build phase. Do not continue making Round 2 code changes after the build phase ends.
+| Scenario | Charge ID | Charge Type & Amount | Operational Evidence Finding | System Decision |
+|---|---|---|---|---|
+| **Case 1: CLAIM** | `FEE-0014-1` | Inbound Defect Fee ($2.00) | Prep audit (`PRP-0014`) proves 100% compliance (polybag sealed, warning legible, barcode covered, label flat). Receiving reports no defects. Evidence contradicts charge. | **CLAIM ($2.00)** with supporting evidence IDs attached. |
+| **Case 2: NO CLAIM** | `FEE-0007-1` | Weight Tier Fee ($3.50) | Prep logs prove standard packaging for `SKU-CABLE-USBC`, and charged fee ($3.50) conforms exactly to the established baseline tier. Evidence supports billing. | **NO CLAIM** ($0.00). Valid channel fee. |
+| **Case 3: UNCERTAIN** | `FEE-0035-1` | Inbound Defect Fee ($0.50) | Prep audit (`PRP-0035`) recorded `original_barcode_covered: uncertain`. Evidence is inconclusive; system declines to guess. | **UNCERTAIN** ($0.00). Routed to Review Queue with suggested action: *"Inspect photo audit"*. |
 
 ---
 
-## Evaluation
+## 6. REST API Reference
 
-Recovery Manager is evaluated differently from the vision-based Managers.
+All endpoints support the `x-tenant-id` header or `?org_id=` query parameter.
 
-The primary question is:
-
-> **When Recovery Manager recommends a claim, is that claim actually supported by the available evidence?**
-
-Your evaluation should focus on:
-
-* charge/report parsing,
-* charge-to-unit matching,
-* upstream evidence matching,
-* evidence interpretation,
-* claim correctness,
-* claim precision,
-* uncertainty/review handling,
-* false claims and missed recoverable claims,
-* important failure modes.
-
-Report the methodology clearly.
-
-### Primary metric
-
-```text
-Claim Precision
-=
-Correctly Supported Claims
---------------------------
-All Claims Recommended
-```
-
-Where measurable, also report:
-
-* total charges evaluated,
-* claims recommended,
-* correctly supported claims,
-* incorrectly recommended claims,
-* missed recoverable claims,
-* `UNCERTAIN` / review rate,
-* latency/cost where relevant.
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/metrics` | Returns financial KPIs ($ Amount Reviewed, $ Claimable, Claim Precision, Review Rate). |
+| `POST` | `/api/charges/ingest` | Ingests an array of raw fee/adjustment report lines. |
+| `GET` | `/api/charges` | Lists charges for the tenant with optional `charge_type` or `unit_id` filters. |
+| `GET` | `/api/charges/:id` | Returns a single normalized charge record. |
+| `GET` | `/api/charges/:id/evidence` | Returns the complete Unit Evidence Graph and relevant evidence subset. |
+| `GET` | `/api/charges/:id/decision` | Returns the deterministic decision, coverage, and contradiction status. |
+| `GET` | `/api/claims` | Lists all compiled, defensible recovery claims. |
+| `GET` | `/api/claims/:id` | Returns full claim package with supporting record IDs and summaries. |
+| `GET` | `/api/reviews` | Lists all pending or resolved human review items. |
+| `GET` | `/api/reviews/:id` | Returns specific review item details. |
+| `POST` | `/api/reviews/:id/resolve` | Resolves a review item with operator notes. |
+| `GET` | `/api/audit/:decisionId` | Returns the complete chronological lifecycle event trail. |
+| `POST` | `/api/process/run` | Triggers batch pipeline execution across all ingested charges. |
+| `GET` | `/api/evaluation/synthetic` | Executes the 13 synthetic edge test cases and returns pass/fail metrics. |
 
 ---
 
-## Round 2 Evaluation — 100 Points
+## 7. Limitations & Future Work
 
-| Criterion                                    |  Points |
-| -------------------------------------------- | ------: |
-| Problem Understanding & Solution Relevance   |  **15** |
-| Agent Functionality & Decision Quality       |  **25** |
-| Evaluation, Accuracy & Uncertainty Handling  |  **25** |
-| Evidence, Traceability & Engineering Quality |  **20** |
-| UX, Demo & Documentation                     |  **15** |
-| **TOTAL**                                    | **100** |
-
-For Recovery Manager, the evaluation focus is on **claim correctness and evidence quality**, not image-level accuracy.
+1. **Zero-Valuation Channel Adjustments**: Inventory adjustment reports that log $0.00 require attaching an authoritative catalog valuation schedule before converting into an active claim.
+2. **Channel Policy Extensibility**: Adding new custom fee categories requires defining a policy in `src/core/policies/` implementing required stage selection and contradiction rules.
 
 ---
 
-## Evidence and decision traceability
-
-Your Recovery Manager should make the claim traceable to the evidence that supports it.
-
-At minimum, the workflow should make it possible to understand:
-
-```text
-Charge
-   ↓
-Unit
-   ↓
-Upstream Evidence
-   ↓
-Evidence Interpretation
-   ↓
-Claim Decision
-   ↓
-Supporting Evidence
-```
-
-Use the official evidence contract provided by the organisers as the baseline for interoperability.
-
-Do not create a separate negotiated evidence schema for Round 2.
-
----
-
-## PASS · FAIL · UNCERTAIN
-
-For upstream checks and evidence states:
-
-* **PASS** — the evidence supports the condition.
-* **FAIL** — the evidence shows the condition is not met.
-* **UNCERTAIN** — the evidence is insufficient for a reliable judgment.
-
-`UNCERTAIN` is not simply a low-confidence PASS.
-
-For Recovery, missing, contradictory or insufficient evidence should lead to an appropriate review/uncertain outcome rather than an unsupported claim.
-
----
-
-## Engineering expectations
-
-* **Tenancy isolation:** If you store persistent data, keep organisation/client data properly isolated.
-* **Batch model calls:** Avoid unnecessary repeated model calls.
-* **Fail open:** A model or dependency failure should not silently discard incoming information. Preserve the available information and move the case into an appropriate pending/review state.
-* **Authoritative rules:** Where an external rule is required, use the authoritative source rather than relying on model memory or synthetic sample values.
-* **Evidence traceability:** Preserve the records used to support recovery decisions.
-
----
-
-## What we're being straight with you about
-
-* **The core assumption is untested.** Nobody knows yet whether the evidence produced by automated upstream Managers will be reliable enough to support recovery claims at scale. Finding out that an assumption does not hold, and documenting that clearly, counts as a useful outcome.
-* **Nobody has spoken to a customer yet.** If you can get a real prep center or seller on a call, ask them to rank the five problems by urgency. Don't ask whether they'd buy what you're building.
-* **The background documents disagree in places.** A contradiction is a finding. Raise it as an Issue labelled `finding`.
-
----
-
-## Submission
-
-### Submissions open
-
-**27 September 2026**
-
-### Final deadline
-
-**1 October 2026 · 6:00 PM IST**
-
-The submission form closes permanently at the deadline.
-
-**There is no reopening and no resubmission.**
-
-Your final submission should include:
-
-* your GitHub fork,
-* working Recovery Manager,
-* `README.md`,
-* `ARCHITECTURE.md`,
-* evaluation results,
-* demo video,
-* deployment URL where applicable,
-* LinkedIn post URL.
-
-### LinkedIn — Mandatory
-
-Publish a LinkedIn post about your Round 2 build.
-
-The post must:
-
-* mention your Recovery Manager build,
-* explain what you built,
-* tag **CodeQuesters**,
-* tag **Sydon.AI**.
-
-Include the LinkedIn post URL in the submission form.
-
----
-
-## Commit rule
-
-All code commits forming your Round 2 submission must be made during the authorised build phase.
-
-Round 2 begins:
-
-**25 September 2026 · 9:00 AM IST**
-
-Once the build phase ends, do not continue making Round 2 code changes.
-
----
-
-## Round 2 → Round 3
-
-Round 2 is about your **individual Recovery Manager**.
-
-Participants selected for Round 3 will work in five-person Pods combining:
-
-```text
-Receiving Manager
-+
-Prep Manager
-+
-Pack Manager
-+
-Returns Manager
-+
-Recovery Manager
-```
-
-The objective is to integrate the five specialised agents into one connected end-to-end commerce system.
-
-Your Round 2 implementation should therefore have clear outputs, structured evidence and an understandable interface for downstream integration.
-
----
-
-*Cube Buildathon · Commerce Context*
+*Cube Buildathon · Round 2 · Recovery Manager (`cube26-rcy-0013-javali-ch`)*

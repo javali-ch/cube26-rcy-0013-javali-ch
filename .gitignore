@@ -7,3 +7,7 @@ __pycache__/
 .venv/
 venv/
 .DS_Store
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db

@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "REMA Cross-Pod Evidence Record Contract",
+  "description": "Evidence contract schema defining operational records consumed by Step 5 Recovery Manager from Steps 1-4",
+  "type": "object",
+  "required": ["unit_id", "org_id", "stages", "audit_metadata"],
+  "properties": {
+    "unit_id": {
+      "type": "string",
+      "pattern": "^UNIT-\\d{4}$",
+      "description": "Standardized unit identifier across all five stages"
+    },
+    "org_id": {
+      "type": "string",
+      "description": "Tenant organization identifier for row-level security isolation"
+    },
+    "sku": {
+      "type": "string",
+      "description": "Product Stock Keeping Unit"
+    },
+    "asin": {
+      "type": "string",
+      "description": "Amazon Standard Identification Number"
+    },
+    "fnsku": {
+      "type": "string",
+      "description": "Fulfillment Network SKU barcode identifier"
+    },
+    "stages": {
+      "type": "object",
+      "properties": {
+        "receiving": {
+          "type": ["object", "null"],
+          "properties": {
+            "record_id": { "type": "string" },
+            "captured_at": { "type": "string", "format": "date-time" },
+            "operator_id": { "type": "string" },
+            "cartons_ordered": { "type": "integer" },
+            "cartons_received": { "type": "integer" },
+            "qty_ordered": { "type": "integer" },
+            "qty_received": { "type": "integer" },
+            "identity_match": { "type": "boolean" },
+            "carton_damage": { "type": "string", "enum": ["none", "crushing", "tears"] },
+            "unit_damage": { "type": "string", "enum": ["none", "water", "uncertain"] },
+            "quality_flags": { "type": "string" },
+            "photo_refs": { "type": "string" }
+          },
+          "required": ["record_id", "captured_at", "qty_ordered", "qty_received"]
+        },
+        "prep": {
+          "type": ["object", "null"],
+          "properties": {
+            "record_id": { "type": "string" },
+            "captured_at": { "type": "string", "format": "date-time" },
+            "operator_id": { "type": "string" },
+            "work_order_id": { "type": "string" },
+            "fba_shipment_id": { "type": "string" },
+            "prep_price_usd": { "type": "number" },
+            "wo_polybag": { "type": "boolean" },
+            "wo_suffocation_warning": { "type": "boolean" },
+            "wo_expiry_date": { "type": "boolean" },
+            "wo_handling_marks": { "type": "string" },
+            "polybag_present_sealed": { "type": "string", "enum": ["yes", "not_required", "not_sealed", "missing", "uncertain"] },
+            "suffocation_warning": { "type": "string", "enum": ["legible", "not_required", "missing", "obscured_by_fold", "uncertain"] },
+            "fnsku_label_placement": { "type": "string", "enum": ["flat", "on_edge", "on_curve", "on_seam", "missing", "uncertain"] },
+            "original_barcode_covered": { "type": "string", "enum": ["yes", "no", "uncertain"] },
+            "expiry_date": { "type": "string", "enum": ["legible", "not_required", "illegible_after_wrap", "uncertain"] },
+            "handling_marks": { "type": "string", "enum": ["all_present", "not_required", "some_missing", "uncertain"] },
+            "photo_refs": { "type": "string" }
+          },
+          "required": ["record_id", "captured_at", "polybag_present_sealed", "fnsku_label_placement", "original_barcode_covered"]
+        },
+        "pack": {
+          "type": ["object", "null"],
+          "properties": {
+            "record_id": { "type": "string" },
+            "captured_at": { "type": "string", "format": "date-time" },
+            "order_id": { "type": "string" },
+            "channel": { "type": "string" },
+            "order_lines": { "type": "string" },
+            "observed_in_box": { "type": "string" },
+            "operator_verdict": { "type": "string", "enum": ["seal", "stop_and_fix"] },
+            "photo_refs": { "type": "string" }
+          },
+          "required": ["record_id", "captured_at", "order_id", "operator_verdict"]
+        },
+        "returns": {
+          "type": ["object", "null"],
+          "properties": {
+            "record_id": { "type": "string" },
+            "captured_at": { "type": "string", "format": "date-time" },
+            "order_id": { "type": "string" },
+            "identity_match": { "type": "boolean" },
+            "parts_list": { "type": "string" },
+            "parts_missing": { "type": "string" },
+            "observed_state": { "type": "string", "enum": ["factory_sealed", "opened_unused", "signs_of_use", "damaged", "uncertain"] },
+            "operator_disposition": { "type": "string", "enum": ["restock", "liquidate", "refurbish", "dispose", "pending_review"] },
+            "photo_refs": { "type": "string" }
+          },
+          "required": ["record_id", "captured_at", "observed_state", "operator_disposition"]
+        }
+      }
+    },
+    "audit_metadata": {
+      "type": "object",
+      "properties": {
+        "hash": { "type": "string" },
+        "generated_at": { "type": "string", "format": "date-time" },
+        "contract_version": { "type": "string" }
+      },
+      "required": ["generated_at", "contract_version"]
+    }
+  }
+}

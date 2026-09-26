@@ -1,0 +1,27 @@
+{
+  "name": "cube26-rcy-0013-javali-ch",
+  "version": "1.0.0",
+  "description": "**Commerce Context stream · Round 2 · Individual Build**",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/api/server.js",
+    "test": "node src/test/pipeline.test.js && node src/test/eval.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/javali-ch/cube26-rcy-0013-javali-ch.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/javali-ch/cube26-rcy-0013-javali-ch/issues"
+  },
+  "homepage": "https://github.com/javali-ch/cube26-rcy-0013-javali-ch#readme",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "csv-parse": "^7.0.3",
+    "dotenv": "^18.0.4",
+    "express": "^5.2.1"
+  }
+}

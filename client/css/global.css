@@ -1,0 +1,456 @@
+/**
+ * REMA — Recovery Manager
+ * Global Base Layout, Header, Typography, and Section Containers
+ */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--rema-font-sans);
+  background-color: var(--rema-background);
+  color: var(--rema-text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* App Header */
+header.app-header {
+  background: var(--rema-background);
+  border-bottom: 1px solid var(--rema-border);
+  padding: 0.85rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand-section {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.brand-logo {
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--rema-primary-dark);
+}
+
+.brand-sub {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--rema-muted);
+}
+
+.brand-tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--rema-primary);
+  background: var(--rema-surface-subtle);
+  padding: 2px 8px;
+  border-radius: var(--rema-radius-sm);
+  margin-left: 0.25rem;
+}
+
+/* Navigation Links */
+.nav-links {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.nav-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--rema-radius-sm);
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--rema-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.nav-btn:hover {
+  background: var(--rema-surface-subtle);
+  color: var(--rema-text);
+}
+
+.nav-btn.active {
+  background: var(--rema-primary);
+  color: #FFFFFF;
+}
+
+.badge-nav-review {
+  color: var(--rema-uncertain-text);
+  font-weight: 700;
+  margin-left: 0.25rem;
+}
+
+.nav-btn.active .badge-nav-review {
+  color: #FFFFFF;
+}
+
+/* Header Controls & Tenant Switcher */
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.tenant-select {
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--rema-radius-sm);
+  border: 1px solid var(--rema-border);
+  background: var(--rema-background);
+  color: var(--rema-text);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.tenant-select:focus {
+  outline: none;
+  border-color: var(--rema-primary);
+}
+
+.demo-pills {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--rema-text-subtle);
+}
+
+.demo-pill-btn {
+  background: var(--rema-surface-subtle);
+  border: 1px solid var(--rema-border);
+  color: var(--rema-primary-dark);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--rema-radius-sm);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.demo-pill-btn:hover {
+  background: var(--rema-border);
+}
+
+/* Main Container */
+main.app-main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2.25rem 1.5rem 5rem 1.5rem;
+}
+
+/* View Sections */
+.view-section {
+  display: none;
+}
+
+.view-section.active {
+  display: block;
+}
+
+/* Page Hero */
+.page-hero {
+  margin-bottom: 2rem;
+}
+
+.page-hero h1 {
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: var(--rema-primary-dark);
+  letter-spacing: -0.02em;
+}
+
+.page-hero p {
+  color: var(--rema-muted);
+  font-size: 0.95rem;
+  margin-top: 0.25rem;
+}
+
+/* Reusable Card Section */
+.card-section {
+  background: var(--rema-background);
+  border: 1px solid var(--rema-border);
+  border-radius: var(--rema-radius-lg);
+  padding: 1.5rem 1.75rem;
+  box-shadow: var(--rema-shadow-card);
+  margin-bottom: 2rem;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.card-header h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--rema-primary-dark);
+}
+
+/* Flex Utilities */
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-gap-sm {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Table Semantic Cell Classes */
+.cell-id {
+  font-weight: 600;
+  font-family: var(--rema-font-mono);
+}
+
+.cell-unit {
+  font-weight: 600;
+  color: var(--rema-primary-dark);
+}
+
+.cell-type {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  color: var(--rema-muted);
+}
+
+.cell-amount {
+  font-weight: 700;
+}
+
+.cell-status {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.cell-meta {
+  font-size: 0.8rem;
+}
+
+.cell-reason {
+  font-size: 0.83rem;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cell-rationale-full {
+  font-size: 0.82rem;
+  color: var(--rema-muted);
+  line-height: 1.4;
+}
+
+.table-empty {
+  text-align: center;
+  padding: 2.25rem 1rem;
+  color: var(--rema-muted);
+}
+
+.table-loading {
+  text-align: center;
+  padding: 1.75rem 1rem;
+  color: var(--rema-muted);
+}
+
+.table-error {
+  text-align: center;
+  padding: 1.75rem 1rem;
+  color: #C62828;
+  font-weight: 500;
+}
+
+/* Specific Badge Sizing Helpers */
+.badge-detail {
+  font-size: 0.95rem;
+  padding: 5px 14px;
+}
+
+.badge-precision {
+  font-size: 0.78rem;
+}
+
+.badge-nav-count {
+  font-weight: 700;
+  color: var(--rema-uncertain-text);
+  margin-left: 2px;
+}
+
+.badge-review-type {
+  font-size: 0.7rem;
+}
+
+/* Specific Metric Value Colors */
+.metric-claimable {
+  color: var(--rema-primary);
+}
+
+.metric-reviews {
+  color: var(--rema-uncertain-text);
+}
+
+/* Input Fields */
+.explorer-search-input {
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--rema-radius-sm);
+  border: 1px solid var(--rema-border);
+  background: var(--rema-surface);
+  color: var(--rema-text);
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
+.explorer-search-input:focus {
+  outline: none;
+  border-color: var(--rema-primary);
+  background: var(--rema-background);
+}
+
+/* Typography & Subheaders */
+.section-subheading {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--rema-primary-dark);
+  margin-top: 2.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.section-caption {
+  font-size: 0.85rem;
+  color: var(--rema-muted);
+  margin-bottom: 1.25rem;
+}
+
+.safety-caption {
+  font-size: 0.82rem;
+  color: var(--rema-muted);
+}
+
+/* Modal Helpers */
+.modal-subtext {
+  font-size: 0.85rem;
+  color: var(--rema-muted);
+  margin-bottom: 0.5rem;
+}
+
+.modal-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--rema-muted);
+  display: block;
+}
+
+/* Review Item Helpers */
+.review-header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.35rem;
+}
+
+.review-severity-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--rema-muted);
+}
+
+.review-resolved-note {
+  font-size: 0.82rem;
+  color: var(--rema-primary);
+  margin-top: 0.5rem;
+}
+
+/* Audit Item Lineage Helpers */
+.audit-timeline-item {
+  border-left: 2px solid var(--rema-primary);
+  padding-left: 1.15rem;
+  padding-bottom: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.audit-timestamp {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--rema-muted);
+}
+
+.audit-content {
+  font-size: 0.82rem;
+  color: var(--rema-text);
+  margin-top: 0.15rem;
+  font-family: var(--rema-font-mono);
+}
+
+.audit-empty {
+  font-size: 0.85rem;
+  color: var(--rema-muted);
+}
+
+/* Rationale Dynamic Classes */
+.rationale-claim {
+  color: var(--rema-primary);
+}
+
+.rationale-noclaim {
+  color: var(--rema-muted);
+}
+
+.rationale-uncertain {
+  color: var(--rema-uncertain-text);
+}
+
+/* Back Button Component */
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--rema-surface);
+  border: 1px solid var(--rema-border);
+  color: var(--rema-muted);
+  padding: 0.45rem 0.95rem;
+  border-radius: var(--rema-radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 1.25rem;
+  transition: all 0.15s ease;
+  line-height: 1.2;
+}
+
+.btn-back:hover {
+  background: var(--rema-surface-subtle);
+  color: var(--rema-primary-dark);
+  border-color: var(--rema-primary-light);
+}
+
+.btn-back svg,
+.btn-back span.back-arrow {
+  font-size: 1rem;
+  line-height: 1;
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+
+.btn-back:hover span.back-arrow {
+  transform: translateX(-2px);
+}
+

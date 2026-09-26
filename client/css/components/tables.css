@@ -1,0 +1,125 @@
+/**
+ * REMA — Recovery Manager
+ * Component: Data Tables, Categorical Badges, and Action Buttons
+ */
+
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: var(--rema-radius-md);
+  border: 1px solid var(--rema-border-subtle);
+}
+
+table.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.88rem;
+}
+
+table.data-table th {
+  padding: 0.85rem 1.1rem;
+  font-weight: 600;
+  color: var(--rema-muted);
+  border-bottom: 1px solid var(--rema-border);
+  background: var(--rema-surface);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+table.data-table td {
+  padding: 0.95rem 1.1rem;
+  border-bottom: 1px solid var(--rema-border-subtle);
+  color: var(--rema-text);
+  vertical-align: middle;
+}
+
+table.data-table tbody tr {
+  transition: background-color 0.12s ease;
+}
+
+table.data-table tbody tr:hover td {
+  background-color: var(--rema-surface-hover);
+}
+
+table.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Categorical Financial Verdict Badges */
+.badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: var(--rema-radius-sm);
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid transparent;
+  line-height: 1.25;
+}
+
+.badge-claim {
+  background: var(--rema-claim-bg);
+  border-color: var(--rema-claim-border);
+  color: var(--rema-claim-text);
+}
+
+.badge-noclaim {
+  background: var(--rema-noclaim-bg);
+  border-color: var(--rema-noclaim-border);
+  color: var(--rema-noclaim-text);
+}
+
+.badge-uncertain {
+  background: var(--rema-uncertain-bg);
+  border-color: var(--rema-uncertain-border);
+  color: var(--rema-uncertain-text);
+}
+
+/* Operational Evidence Reliability Badges */
+.badge-reliable {
+  background: var(--rema-reliable-bg);
+  border-color: var(--rema-reliable-border);
+  color: var(--rema-reliable-text);
+}
+
+.badge-degraded {
+  background: var(--rema-degraded-bg);
+  border-color: var(--rema-degraded-border);
+  color: var(--rema-degraded-text);
+}
+
+.badge-conflicted {
+  background: var(--rema-conflicted-bg);
+  border-color: var(--rema-conflicted-border);
+  color: var(--rema-conflicted-text);
+}
+
+/* Action Button */
+.btn-action {
+  background: var(--rema-surface-subtle);
+  border: 1px solid var(--rema-border);
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--rema-primary);
+  border-radius: var(--rema-radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-action:hover {
+  background: var(--rema-primary);
+  color: #FFFFFF;
+  border-color: var(--rema-primary);
+}
+
+.table-empty {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--rema-muted);
+  font-size: 0.88rem;
+}
+

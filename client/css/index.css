@@ -1,0 +1,13 @@
+/**
+ * REMA — Recovery Manager
+ * Master CSS Entry Point
+ * Modular Architecture with Design System Tokens & Component Scopes
+ */
+
+@import './variables.css';
+@import './global.css';
+@import './components/metrics.css';
+@import './components/tables.css';
+@import './components/claim-detail.css';
+@import './components/review-queue.css';
+@import './responsive.css';

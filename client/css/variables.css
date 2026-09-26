@@ -1,0 +1,59 @@
+/**
+ * REMA — Recovery Manager
+ * Design System Tokens & CSS Custom Properties
+ * Minimal, Trustworthy, Intelligent, Clean, Evidence-Driven
+ */
+
+:root {
+  /* Brand Core Palette */
+  --rema-primary: #3F5138;          /* Army Green */
+  --rema-primary-dark: #26351F;     /* Deep Forest / Dark Green Text */
+  --rema-primary-light: #52674A;    /* Olive Accent */
+  --rema-background: #FFFFFF;       /* Pure White Background */
+  --rema-surface: #F9FAF8;          /* Soft Light-Green Tinted Surface */
+  --rema-surface-subtle: #EEF2EA;   /* Light Green Secondary Background */
+  --rema-surface-hover: #F2F5F0;    /* Soft Table/Card Hover */
+  --rema-border: #E3E7DF;           /* Minimal Slate Border */
+  --rema-border-subtle: #ECEFEA;    /* Inner Dividing Border */
+  --rema-text: #1E241B;             /* Primary Text */
+  --rema-muted: #5B6655;            /* Muted Olive Text */
+  --rema-text-subtle: #7E8A78;      /* Secondary Subtitle / Timestamp Text */
+
+  /* Verdict Categorical Status Colors */
+  --rema-claim-bg: #E8F2E5;
+  --rema-claim-border: #C2DCC0;
+  --rema-claim-text: #24521E;
+
+  --rema-noclaim-bg: #F0F3EE;
+  --rema-noclaim-border: #D3DAD0;
+  --rema-noclaim-text: #454E41;
+
+  --rema-uncertain-bg: #FFF8EB;
+  --rema-uncertain-border: #EED9B7;
+  --rema-uncertain-text: #875510;
+
+  /* Reliability Badges */
+  --rema-reliable-bg: #E8F5E9;
+  --rema-reliable-border: #C8E6C9;
+  --rema-reliable-text: #2E7D32;
+
+  --rema-degraded-bg: #FFF3E0;
+  --rema-degraded-border: #FFE0B2;
+  --rema-degraded-text: #E65100;
+
+  --rema-conflicted-bg: #FFEBEE;
+  --rema-conflicted-border: #FFCDD2;
+  --rema-conflicted-text: #C62828;
+
+  /* Geometry & Shadows */
+  --rema-radius-sm: 6px;
+  --rema-radius-md: 10px;
+  --rema-radius-lg: 14px;
+  --rema-shadow-sm: 0 1px 3px rgba(38, 53, 31, 0.04);
+  --rema-shadow-card: 0 2px 8px rgba(38, 53, 31, 0.04), 0 1px 2px rgba(38, 53, 31, 0.02);
+  --rema-shadow-hover: 0 4px 14px rgba(38, 53, 31, 0.08);
+
+  /* Typography */
+  --rema-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --rema-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}

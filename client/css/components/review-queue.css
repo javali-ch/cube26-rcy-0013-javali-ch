@@ -1,0 +1,157 @@
+/**
+ * REMA — Recovery Manager
+ * Component: Human Review Queue Cards & Interactive Resolution Modal
+ */
+
+.review-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+.review-item-card {
+  background: var(--rema-surface);
+  border: 1px solid var(--rema-border);
+  border-radius: var(--rema-radius-md);
+  padding: 1.35rem 1.6rem;
+  box-shadow: var(--rema-shadow-card);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  transition: border-color 0.15s ease;
+}
+
+.review-item-card:hover {
+  border-color: var(--rema-border);
+}
+
+.review-info {
+  flex: 1;
+}
+
+.review-info h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--rema-primary-dark);
+}
+
+.review-info p.review-reason {
+  font-size: 0.88rem;
+  color: var(--rema-text);
+  margin: 0.45rem 0 0.65rem 0;
+  line-height: 1.45;
+}
+
+.review-info .suggested-action-box {
+  background: var(--rema-surface-subtle);
+  border: 1px solid var(--rema-border);
+  padding: 0.65rem 1rem;
+  border-radius: var(--rema-radius-sm);
+  font-size: 0.83rem;
+  font-weight: 500;
+  color: var(--rema-primary-dark);
+  line-height: 1.45;
+}
+
+.review-actions-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.btn-resolve {
+  background: var(--rema-primary);
+  color: #FFFFFF;
+  border: none;
+  padding: 0.5rem 1.15rem;
+  border-radius: var(--rema-radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-resolve:hover {
+  background: var(--rema-primary-dark);
+}
+
+/* Resolution Modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(30, 36, 27, 0.5);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal-card {
+  background: var(--rema-background);
+  border: 1px solid var(--rema-border);
+  border-radius: var(--rema-radius-lg);
+  padding: 2rem;
+  max-width: 520px;
+  width: 90%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+.modal-card h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--rema-primary-dark);
+  margin-bottom: 0.4rem;
+}
+
+.modal-card textarea {
+  width: 100%;
+  min-height: 110px;
+  padding: 0.85rem;
+  border-radius: var(--rema-radius-sm);
+  border: 1px solid var(--rema-border);
+  margin: 1rem 0 1.25rem 0;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--rema-text);
+  background: var(--rema-surface);
+  resize: vertical;
+}
+
+.modal-card textarea:focus {
+  outline: none;
+  border-color: var(--rema-primary);
+  background: var(--rema-background);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.btn-cancel {
+  background: transparent;
+  border: 1px solid var(--rema-border);
+  color: var(--rema-muted);
+  padding: 0.5rem 1.1rem;
+  border-radius: var(--rema-radius-sm);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.btn-cancel:hover {
+  background: var(--rema-surface-subtle);
+  color: var(--rema-text);
+}
