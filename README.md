@@ -2,13 +2,6 @@
 **Step 5 of 5 · Money Back**  
 *Turn operational evidence into defensible recovery claims.*
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![Benchmark Precision](https://img.shields.io/badge/benchmark%20precision-100%25-success.svg)]()
-[![Multi-Tenancy](https://img.shields.io/badge/tenancy-isolated%20RLS-blue.svg)]()
-[![Evaluation](https://img.shields.io/badge/synthetic%20benchmark-22%2F22%20passed-brightgreen.svg)]()
-[![License](https://img.shields.io/badge/license-ISC-lightgrey.svg)]()
-
----
 
 ## Table of Contents
 1. [Problem Understanding](#1-problem-understanding)
