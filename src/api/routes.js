@@ -7,9 +7,11 @@ const express = require('express');
 const path = require('node:path');
 const Normalizer = require('../core/normalizer');
 const EvaluationEngine = require('../core/evaluation');
+const BatchProcessor = require('../core/batchProcessor');
 
 function createRouter(dbManager, batchProcessor) {
   const router = express.Router();
+  const processor = batchProcessor || new BatchProcessor(dbManager);
 
   // Middleware: Extract tenant organization
   router.use((req, res, next) => {
@@ -95,6 +97,7 @@ function createRouter(dbManager, batchProcessor) {
       const EvidenceGraph = require('../core/evidenceGraph');
       const graph = EvidenceGraph.buildForUnit(charge.unit_id, req.tenantRepo);
       const relevant = graph.selectRelevantEvidence(charge.charge_type);
+      const manualEvidence = req.tenantRepo.listManualEvidenceForCharge(charge.charge_id);
 
       res.json({
         success: true,
@@ -109,9 +112,168 @@ function createRouter(dbManager, batchProcessor) {
             record_reliability: graph.recordReliability,
             cross_source_consistency: graph.crossSourceConsistency
           },
-          relevant_evidence: relevant
+          relevant_evidence: relevant,
+          manual_evidence: manualEvidence
         }
       });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 5b. GET /api/charges/:id/evidence/manual - Retrieve manual evidence for charge
+  router.get('/charges/:id/evidence/manual', (req, res) => {
+    try {
+      const charge = req.tenantRepo.getCharge(req.params.id);
+      if (!charge) {
+        return res.status(404).json({ success: false, error: `Charge '${req.params.id}' not found` });
+      }
+      const records = req.tenantRepo.listManualEvidenceForCharge(charge.charge_id);
+      res.json({ success: true, count: records.length, data: records });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 5c. POST /api/charges/:id/evidence/manual - Attach optional manual supporting evidence
+  router.post('/charges/:id/evidence/manual', express.json({ limit: '10mb' }), (req, res) => {
+    try {
+      const charge = req.tenantRepo.getCharge(req.params.id);
+      if (!charge) {
+        return res.status(404).json({ success: false, error: `Charge '${req.params.id}' not found` });
+      }
+
+      const { filename, file_type, file_size, description, file_data } = req.body;
+      if (!filename || typeof filename !== 'string') {
+        return res.status(400).json({ success: false, error: 'A filename is required for manual evidence attachment.' });
+      }
+
+      const evidenceId = `MEV-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+      const manualRecord = {
+        evidence_id: evidenceId,
+        org_id: req.orgId,
+        charge_id: charge.charge_id,
+        unit_id: charge.unit_id || null,
+        filename: filename.trim(),
+        file_type: file_type || 'application/octet-stream',
+        file_size: file_size || 0,
+        description: (description || '').trim(),
+        file_data: file_data || null,
+        source: 'Seller / Manual Upload',
+        created_at: new Date().toISOString()
+      };
+
+      req.tenantRepo.insertManualEvidence(manualRecord);
+
+      // Audit Trail: Record MANUAL_EVIDENCE_ATTACHED
+      req.tenantRepo.logAudit({
+        charge_id: charge.charge_id,
+        unit_id: charge.unit_id || null,
+        decision_id: null,
+        event_type: 'MANUAL_EVIDENCE_ATTACHED',
+        details: {
+          evidence_id: evidenceId,
+          filename: manualRecord.filename,
+          file_type: manualRecord.file_type,
+          file_size: manualRecord.file_size,
+          source: 'Seller / Manual Upload',
+          timestamp: manualRecord.created_at
+        }
+      });
+
+      // Audit Trail: Record EVIDENCE_DESCRIPTION_ADDED if description provided
+      if (manualRecord.description) {
+        req.tenantRepo.logAudit({
+          charge_id: charge.charge_id,
+          unit_id: charge.unit_id || null,
+          decision_id: null,
+          event_type: 'EVIDENCE_DESCRIPTION_ADDED',
+          details: {
+            evidence_id: evidenceId,
+            description: manualRecord.description
+          }
+        });
+      }
+
+      res.status(201).json({ success: true, data: manualRecord });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 5d. POST /api/charges/:id/re-evaluate - Re-evaluate case through existing decision engine
+  router.post('/charges/:id/re-evaluate', express.json(), (req, res) => {
+    try {
+      const charge = req.tenantRepo.getCharge(req.params.id);
+      if (!charge) {
+        return res.status(404).json({ success: false, error: `Charge '${req.params.id}' not found` });
+      }
+
+      const prevDecision = req.tenantRepo.getDecisionForCharge(charge.charge_id);
+      const prevVerdict = prevDecision ? prevDecision.verdict : null;
+
+      // Re-evaluate using EXISTING REMA decision engine pipeline
+      const runResult = processor.processCharge(charge, req.tenantRepo);
+      const newDecision = runResult.decision;
+      const newVerdict = newDecision.verdict;
+
+      const manualEvidence = req.tenantRepo.listManualEvidenceForCharge(charge.charge_id);
+
+      // Audit Trail: Record CASE_REEVALUATED
+      req.tenantRepo.logAudit({
+        charge_id: charge.charge_id,
+        unit_id: charge.unit_id || null,
+        decision_id: newDecision.decision_id,
+        event_type: 'CASE_REEVALUATED',
+        details: {
+          charge_id: charge.charge_id,
+          previous_verdict: prevVerdict,
+          new_verdict: newVerdict,
+          manual_evidence_count: manualEvidence.length,
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      // Audit Trail: If verdict changed, record DECISION_CHANGED
+      if (prevVerdict && prevVerdict !== newVerdict) {
+        req.tenantRepo.logAudit({
+          charge_id: charge.charge_id,
+          unit_id: charge.unit_id || null,
+          decision_id: newDecision.decision_id,
+          event_type: 'DECISION_CHANGED',
+          details: {
+            charge_id: charge.charge_id,
+            from: prevVerdict,
+            to: newVerdict,
+            reason: newDecision.reason || newDecision.explanation
+          }
+        });
+      }
+
+      res.json({
+        success: true,
+        data: {
+          decision: newDecision,
+          claim: runResult.claim,
+          review: runResult.review,
+          manual_evidence: manualEvidence
+        }
+      });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 5e. GET /api/charges/:id/audit - Retrieve all audit events for charge
+  router.get('/charges/:id/audit', (req, res) => {
+    try {
+      const charge = req.tenantRepo.getCharge(req.params.id);
+      if (!charge) {
+        return res.status(404).json({ success: false, error: `Charge '${req.params.id}' not found` });
+      }
+      const decision = req.tenantRepo.getDecisionForCharge(charge.charge_id);
+      const trail = req.tenantRepo.getAuditTrail(decision?.decision_id, charge.charge_id);
+      res.json({ success: true, count: trail.length, data: trail });
     } catch (err) {
       res.status(500).json({ success: false, error: err.message });
     }
@@ -196,7 +358,10 @@ function createRouter(dbManager, batchProcessor) {
   // 12. GET /api/audit/:decisionId - Trace chronological decision lineage
   router.get('/audit/:decisionId', (req, res) => {
     try {
-      const trail = req.tenantRepo.getAuditTrail(req.params.decisionId);
+      const id = req.params.decisionId;
+      const chargeId = id.startsWith('DEC-') ? id.substring(4) : id;
+      const decisionId = id.startsWith('DEC-') ? id : `DEC-${id}`;
+      const trail = req.tenantRepo.getAuditTrail(decisionId, chargeId);
       res.json({ success: true, count: trail.length, data: trail });
     } catch (err) {
       res.status(500).json({ success: false, error: err.message });

@@ -5,7 +5,11 @@
   "main": "index.js",
   "scripts": {
     "start": "node src/api/server.js",
-    "test": "node src/test/pipeline.test.js && node src/test/eval.test.js"
+    "dev": "node scripts/dev.js",
+    "dev:server": "node src/api/server.js",
+    "dev:client": "npm --prefix client run dev",
+    "build": "npm --prefix client run build",
+    "test": "node src/test/pipeline.test.js && node src/test/eval.test.js && node src/test/recoveryOperations.test.js"
   },
   "repository": {
     "type": "git",

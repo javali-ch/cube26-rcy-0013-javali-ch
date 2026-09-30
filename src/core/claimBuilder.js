@@ -28,12 +28,20 @@ class ClaimBuilder {
     const coverageSummary = `Coverage: ${decision.evidence_coverage.status} (Required: ${decision.evidence_coverage.required.join(', ')}).`;
     const reliabilitySummary = `Overall Reliability: ${decision.evidence_reliability.overall}. All supporting audit records verified complete.`;
 
+    const claimAmountUsd = decision.claim_amount_usd !== undefined && decision.claim_amount_usd > 0
+      ? decision.claim_amount_usd
+      : decision.amount_usd;
+
     return {
       claim_id: claimId,
       org_id: charge.org_id,
       charge_id: charge.charge_id,
       unit_id: decision.unit_id,
       amount_usd: decision.amount_usd,
+      total_charge_amount: decision.amount_usd,
+      charge_amount_usd: decision.amount_usd,
+      claim_amount_usd: claimAmountUsd,
+      recoverable_amount_usd: claimAmountUsd,
       currency: charge.currency || 'USD',
       charge_type: charge.charge_type,
       decision: decision.verdict,

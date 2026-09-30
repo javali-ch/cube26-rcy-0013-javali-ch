@@ -11,3 +11,5 @@ venv/
 *.sqlite-wal
 *.sqlite-shm
 *.db
+dist/
+client/dist/

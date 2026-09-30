@@ -303,7 +303,10 @@ class BatchProcessor {
       const out = this.processCharge(charge, tenantRepo);
       if (out.decision.verdict === DecisionVerdict.CLAIM) {
         results.claims_count++;
-        results.claim_amount_usd = parseFloat((results.claim_amount_usd + out.decision.amount_usd).toFixed(2));
+        const claimVal = out.decision.claim_amount_usd !== undefined
+          ? out.decision.claim_amount_usd
+          : (out.claim ? out.claim.claim_amount_usd : out.decision.amount_usd);
+        results.claim_amount_usd = parseFloat((results.claim_amount_usd + claimVal).toFixed(2));
         results.claims.push(out);
       } else if (out.decision.verdict === DecisionVerdict.NO_CLAIM) {
         results.no_claims_count++;

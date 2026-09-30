@@ -103,6 +103,14 @@ class DatabaseManager {
         conflicts TEXT NOT NULL,
         review_required INTEGER DEFAULT 0,
         created_at TEXT NOT NULL,
+        reason_code TEXT,
+        explanation TEXT,
+        cannot_claim INTEGER DEFAULT 0,
+        cannot_claim_reason TEXT,
+        match_method TEXT,
+        supporting_evidence TEXT,
+        authoritative_rule TEXT,
+        eligibility_result TEXT,
         PRIMARY KEY (decision_id, org_id)
       );
       CREATE INDEX IF NOT EXISTS idx_decisions_org ON decisions(org_id);
@@ -184,7 +192,59 @@ class DatabaseManager {
         PRIMARY KEY (run_id, org_id)
       );
       CREATE INDEX IF NOT EXISTS idx_runs_org ON processing_runs(org_id);
+
+      -- 9. Optional Manual Evidence Table
+      CREATE TABLE IF NOT EXISTS manual_evidence (
+        evidence_id TEXT NOT NULL,
+        org_id TEXT NOT NULL,
+        charge_id TEXT NOT NULL,
+        unit_id TEXT,
+        filename TEXT NOT NULL,
+        file_type TEXT NOT NULL,
+        file_size INTEGER DEFAULT 0,
+        description TEXT,
+        file_data TEXT,
+        source TEXT DEFAULT 'Seller / Manual Upload',
+        created_at TEXT NOT NULL,
+        PRIMARY KEY (evidence_id, org_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_manual_ev_org ON manual_evidence(org_id);
+      CREATE INDEX IF NOT EXISTS idx_manual_ev_charge ON manual_evidence(org_id, charge_id);
+      CREATE INDEX IF NOT EXISTS idx_manual_ev_unit ON manual_evidence(org_id, unit_id);
     `);
+
+    // Safe dynamic migration for existing databases
+    const extraCols = [
+      'reason_code TEXT',
+      'explanation TEXT',
+      'cannot_claim INTEGER DEFAULT 0',
+      'cannot_claim_reason TEXT',
+      'match_method TEXT',
+      'supporting_evidence TEXT',
+      'authoritative_rule TEXT',
+      'eligibility_result TEXT',
+      'claim_amount_usd REAL DEFAULT 0.0',
+      'total_charge_amount REAL'
+    ];
+    for (const col of extraCols) {
+      try {
+        this.db.exec(`ALTER TABLE decisions ADD COLUMN ${col}`);
+      } catch (e) {
+        // column already exists
+      }
+    }
+
+    const claimExtraCols = [
+      'claim_amount_usd REAL DEFAULT 0.0',
+      'total_charge_amount REAL'
+    ];
+    for (const col of claimExtraCols) {
+      try {
+        this.db.exec(`ALTER TABLE claims ADD COLUMN ${col}`);
+      } catch (e) {
+        // column already exists
+      }
+    }
   }
 
   /**
@@ -346,15 +406,71 @@ class TenantRepository {
     }));
   }
 
+  _hydrateDecision(r) {
+    if (!r) return null;
+    let authRule = null;
+    let eligRes = null;
+    let supEv = [];
+    try { if (r.authoritative_rule) authRule = JSON.parse(r.authoritative_rule); } catch (e) {}
+    try { if (r.eligibility_result) eligRes = JSON.parse(r.eligibility_result); } catch (e) {}
+    try { if (r.supporting_evidence) supEv = JSON.parse(r.supporting_evidence); } catch (e) {}
+    const cannotClaim = r.cannot_claim === 1 || r.cannot_claim === true || r.verdict !== 'CLAIM';
+    const totalChargeAmount = r.total_charge_amount !== undefined && r.total_charge_amount !== null
+      ? r.total_charge_amount
+      : r.amount_usd;
+    const claimVal = r.claim_amount_usd !== undefined && r.claim_amount_usd !== null
+      ? r.claim_amount_usd
+      : (r.verdict === 'CLAIM' ? r.amount_usd : 0.00);
+
+    return {
+      ...r,
+      amount_usd: totalChargeAmount,
+      total_charge_amount: totalChargeAmount,
+      charge_amount_usd: totalChargeAmount,
+      claim_amount_usd: claimVal,
+      recoverable_amount_usd: claimVal,
+      evidence_coverage: JSON.parse(r.evidence_coverage || '{}'),
+      evidence_reliability: JSON.parse(r.evidence_reliability || '{}'),
+      supporting_evidence_ids: JSON.parse(r.supporting_evidence_ids || '[]'),
+      missing_evidence: JSON.parse(r.missing_evidence || '[]'),
+      conflicts: JSON.parse(r.conflicts || '[]'),
+      reasonCode: r.reason_code || (r.verdict === 'CLAIM' ? 'RECOVERABLE_CLAIM' : 'UNCERTAIN_OPERATIONAL_EVIDENCE'),
+      reason_code: r.reason_code || (r.verdict === 'CLAIM' ? 'RECOVERABLE_CLAIM' : 'UNCERTAIN_OPERATIONAL_EVIDENCE'),
+      explanation: r.explanation || r.reason,
+      cannotClaim,
+      cannot_claim: cannotClaim,
+      cannotClaimReason: r.cannot_claim_reason || (cannotClaim ? r.reason : null),
+      cannot_claim_reason: r.cannot_claim_reason || (cannotClaim ? r.reason : null),
+      matchMethod: r.match_method || 'UNIT_ID',
+      match_method: r.match_method || 'UNIT_ID',
+      supportingEvidence: supEv,
+      supporting_evidence: supEv,
+      authoritativeRule: authRule,
+      authoritative_rule: authRule,
+      eligibilityResult: eligRes,
+      eligibility_result: eligRes
+    };
+  }
+
   // --- DECISIONS ---
   insertDecision(decision) {
+    const totalChargeAmount = decision.total_charge_amount !== undefined && decision.total_charge_amount !== null
+      ? decision.total_charge_amount
+      : decision.amount_usd;
+    const claimAmount = decision.claim_amount_usd !== undefined && decision.claim_amount_usd !== null
+      ? decision.claim_amount_usd
+      : (decision.verdict === 'CLAIM' ? decision.amount_usd : 0.00);
+
     const stmt = this.db.prepare(`
       INSERT INTO decisions (
         decision_id, org_id, charge_id, unit_id, verdict, amount_usd,
         currency, reason, evidence_coverage, evidence_reliability,
         contradiction_status, rule_version, supporting_evidence_ids,
-        missing_evidence, conflicts, review_required, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        missing_evidence, conflicts, review_required, created_at,
+        reason_code, explanation, cannot_claim, cannot_claim_reason,
+        match_method, supporting_evidence, authoritative_rule, eligibility_result,
+        claim_amount_usd, total_charge_amount
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(decision_id, org_id) DO UPDATE SET
         verdict = excluded.verdict,
         amount_usd = excluded.amount_usd,
@@ -366,7 +482,17 @@ class TenantRepository {
         missing_evidence = excluded.missing_evidence,
         conflicts = excluded.conflicts,
         review_required = excluded.review_required,
-        created_at = excluded.created_at
+        created_at = excluded.created_at,
+        reason_code = excluded.reason_code,
+        explanation = excluded.explanation,
+        cannot_claim = excluded.cannot_claim,
+        cannot_claim_reason = excluded.cannot_claim_reason,
+        match_method = excluded.match_method,
+        supporting_evidence = excluded.supporting_evidence,
+        authoritative_rule = excluded.authoritative_rule,
+        eligibility_result = excluded.eligibility_result,
+        claim_amount_usd = excluded.claim_amount_usd,
+        total_charge_amount = excluded.total_charge_amount
     `);
 
     stmt.run(
@@ -375,7 +501,7 @@ class TenantRepository {
       decision.charge_id,
       decision.unit_id || null,
       decision.verdict,
-      decision.amount_usd,
+      totalChargeAmount,
       decision.currency || 'USD',
       decision.reason,
       JSON.stringify(decision.evidence_coverage || {}),
@@ -386,7 +512,17 @@ class TenantRepository {
       JSON.stringify(decision.missing_evidence || []),
       JSON.stringify(decision.conflicts || []),
       decision.review_required ? 1 : 0,
-      decision.created_at || new Date().toISOString()
+      decision.created_at || new Date().toISOString(),
+      decision.reasonCode || decision.reason_code || null,
+      decision.explanation || decision.reason || null,
+      (decision.cannotClaim || decision.cannot_claim) ? 1 : 0,
+      decision.cannotClaimReason || decision.cannot_claim_reason || null,
+      decision.matchMethod || decision.match_method || 'UNIT_ID',
+      JSON.stringify(decision.supportingEvidence || decision.supporting_evidence || []),
+      JSON.stringify(decision.authoritativeRule || decision.authoritative_rule || null),
+      JSON.stringify(decision.eligibilityResult || decision.eligibility_result || null),
+      claimAmount,
+      totalChargeAmount
     );
   }
 
@@ -395,15 +531,7 @@ class TenantRepository {
       SELECT * FROM decisions WHERE decision_id = ? AND org_id = ?
     `);
     const r = stmt.get(decisionId, this.orgId);
-    if (!r) return null;
-    return {
-      ...r,
-      evidence_coverage: JSON.parse(r.evidence_coverage),
-      evidence_reliability: JSON.parse(r.evidence_reliability),
-      supporting_evidence_ids: JSON.parse(r.supporting_evidence_ids),
-      missing_evidence: JSON.parse(r.missing_evidence),
-      conflicts: JSON.parse(r.conflicts)
-    };
+    return this._hydrateDecision(r);
   }
 
   getDecisionForCharge(chargeId) {
@@ -411,40 +539,33 @@ class TenantRepository {
       SELECT * FROM decisions WHERE charge_id = ? AND org_id = ?
     `);
     const r = stmt.get(chargeId, this.orgId);
-    if (!r) return null;
-    return {
-      ...r,
-      evidence_coverage: JSON.parse(r.evidence_coverage),
-      evidence_reliability: JSON.parse(r.evidence_reliability),
-      supporting_evidence_ids: JSON.parse(r.supporting_evidence_ids),
-      missing_evidence: JSON.parse(r.missing_evidence),
-      conflicts: JSON.parse(r.conflicts)
-    };
+    return this._hydrateDecision(r);
   }
 
   listDecisions() {
     const stmt = this.db.prepare(`
       SELECT * FROM decisions WHERE org_id = ? ORDER BY created_at DESC
     `);
-    return stmt.all(this.orgId).map(r => ({
-      ...r,
-      evidence_coverage: JSON.parse(r.evidence_coverage),
-      evidence_reliability: JSON.parse(r.evidence_reliability),
-      supporting_evidence_ids: JSON.parse(r.supporting_evidence_ids),
-      missing_evidence: JSON.parse(r.missing_evidence),
-      conflicts: JSON.parse(r.conflicts)
-    }));
+    return stmt.all(this.orgId).map(r => this._hydrateDecision(r));
   }
 
   // --- CLAIMS ---
   insertClaim(claim) {
+    const totalChargeAmount = claim.total_charge_amount !== undefined && claim.total_charge_amount !== null
+      ? claim.total_charge_amount
+      : claim.amount_usd;
+    const claimAmount = claim.claim_amount_usd !== undefined && claim.claim_amount_usd !== null
+      ? claim.claim_amount_usd
+      : claim.amount_usd;
+
     const stmt = this.db.prepare(`
       INSERT INTO claims (
         claim_id, org_id, charge_id, unit_id, amount_usd, currency,
         charge_type, reason, supporting_evidence_ids, evidence_summary,
         contradiction_summary, coverage_summary, reliability_summary,
-        rule_version, status, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        rule_version, status, created_at,
+        claim_amount_usd, total_charge_amount
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(claim_id, org_id) DO UPDATE SET
         amount_usd = excluded.amount_usd,
         reason = excluded.reason,
@@ -454,14 +575,16 @@ class TenantRepository {
         coverage_summary = excluded.coverage_summary,
         reliability_summary = excluded.reliability_summary,
         status = excluded.status,
-        created_at = excluded.created_at
+        created_at = excluded.created_at,
+        claim_amount_usd = excluded.claim_amount_usd,
+        total_charge_amount = excluded.total_charge_amount
     `);
     stmt.run(
       claim.claim_id,
       this.orgId,
       claim.charge_id,
       claim.unit_id,
-      claim.amount_usd,
+      totalChargeAmount,
       claim.currency || 'USD',
       claim.charge_type,
       claim.reason,
@@ -472,7 +595,9 @@ class TenantRepository {
       claim.reliability_summary,
       claim.rule_version,
       claim.status || 'DRAFT',
-      claim.created_at || new Date().toISOString()
+      claim.created_at || new Date().toISOString(),
+      claimAmount,
+      totalChargeAmount
     );
   }
 
@@ -592,7 +717,10 @@ class TenantRepository {
   getAuditTrail(decisionId = null, chargeId = null) {
     let sql = `SELECT * FROM audit_log WHERE org_id = ?`;
     const params = [this.orgId];
-    if (decisionId) {
+    if (decisionId && chargeId) {
+      sql += ` AND (decision_id = ? OR charge_id = ?)`;
+      params.push(decisionId, chargeId);
+    } else if (decisionId) {
       sql += ` AND decision_id = ?`;
       params.push(decisionId);
     } else if (chargeId) {
@@ -604,6 +732,54 @@ class TenantRepository {
       ...r,
       details: JSON.parse(r.details)
     }));
+  }
+
+  // --- OPTIONAL MANUAL EVIDENCE ---
+  insertManualEvidence(evidence) {
+    const stmt = this.db.prepare(`
+      INSERT INTO manual_evidence (
+        evidence_id, org_id, charge_id, unit_id, filename,
+        file_type, file_size, description, file_data, source, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(evidence_id, org_id) DO UPDATE SET
+        description = excluded.description,
+        filename = excluded.filename,
+        file_type = excluded.file_type,
+        file_size = excluded.file_size,
+        file_data = excluded.file_data
+    `);
+    stmt.run(
+      evidence.evidence_id || `MEV-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      this.orgId,
+      evidence.charge_id,
+      evidence.unit_id || null,
+      evidence.filename,
+      evidence.file_type || 'application/octet-stream',
+      evidence.file_size || 0,
+      evidence.description || '',
+      evidence.file_data || null,
+      evidence.source || 'Seller / Manual Upload',
+      evidence.created_at || new Date().toISOString()
+    );
+  }
+
+  listManualEvidenceForCharge(chargeId) {
+    const stmt = this.db.prepare(`
+      SELECT * FROM manual_evidence WHERE org_id = ? AND charge_id = ? ORDER BY created_at ASC
+    `);
+    return stmt.all(this.orgId, chargeId);
+  }
+
+  listManualEvidenceForUnit(unitId) {
+    return this.db.prepare(`
+      SELECT * FROM manual_evidence WHERE org_id = ? AND unit_id = ? ORDER BY created_at ASC
+    `).all(this.orgId, unitId);
+  }
+
+  getManualEvidence(evidenceId) {
+    return this.db.prepare(`
+      SELECT * FROM manual_evidence WHERE org_id = ? AND evidence_id = ?
+    `).get(this.orgId, evidenceId);
   }
 
   // --- PROCESSING RUNS & METRICS ---
@@ -711,9 +887,9 @@ class TenantRepository {
 
     // Ensure 1 authoritative decision per charge
     const decisionsStmt = this.db.prepare(`
-      SELECT verdict, COUNT(*) as count, SUM(amount_usd) as total_usd
+      SELECT verdict, COUNT(*) as count, SUM(amount_usd) as total_usd, SUM(claim_amount_usd) as total_claim_usd
       FROM (
-        SELECT charge_id, verdict, amount_usd
+        SELECT charge_id, verdict, amount_usd, claim_amount_usd
         FROM decisions
         WHERE org_id = ?
         GROUP BY charge_id
@@ -722,10 +898,18 @@ class TenantRepository {
     `);
     const decisionRows = decisionsStmt.all(this.orgId);
 
-    const verdictMap = { CLAIM: { count: 0, total_usd: 0 }, NO_CLAIM: { count: 0, total_usd: 0 }, UNCERTAIN: { count: 0, total_usd: 0 } };
+    const verdictMap = {
+      CLAIM: { count: 0, total_usd: 0, total_claim_usd: 0 },
+      NO_CLAIM: { count: 0, total_usd: 0, total_claim_usd: 0 },
+      UNCERTAIN: { count: 0, total_usd: 0, total_claim_usd: 0 }
+    };
     for (const row of decisionRows) {
       if (verdictMap[row.verdict]) {
-        verdictMap[row.verdict] = { count: row.count, total_usd: parseFloat((row.total_usd || 0).toFixed(2)) };
+        verdictMap[row.verdict] = {
+          count: row.count,
+          total_usd: parseFloat((row.total_usd || 0).toFixed(2)),
+          total_claim_usd: parseFloat((row.total_claim_usd || 0).toFixed(2))
+        };
       }
     }
 
@@ -753,7 +937,7 @@ class TenantRepository {
     for (const clm of claims) {
       if (seenClaimCharges.has(clm.charge_id)) continue;
       seenClaimCharges.add(clm.charge_id);
-      if (clm.supporting_evidence_ids && clm.supporting_evidence_ids.length > 0 && clm.amount_usd > 0) {
+      if (clm.supporting_evidence_ids && clm.supporting_evidence_ids.length > 0 && ((clm.claim_amount_usd !== undefined ? clm.claim_amount_usd : clm.amount_usd) > 0)) {
         correctlySupported++;
       }
     }
@@ -772,7 +956,11 @@ class TenantRepository {
       org_id: this.orgId,
       total_charges_reviewed: totalCharges,
       total_amount_reviewed: totalAmount,
-      total_claimable_amount: verdictMap.CLAIM.total_usd,
+      total_charge_amount: totalAmount,
+      total_claimable_amount: verdictMap.CLAIM.total_claim_usd || verdictMap.CLAIM.total_usd,
+      claims_total_charge_amount: verdictMap.CLAIM.total_usd,
+      no_claims_total_charge_amount: verdictMap.NO_CLAIM.total_usd,
+      uncertain_total_charge_amount: verdictMap.UNCERTAIN.total_usd,
       claims_count: claimsCount,
       no_claims_count: noClaimsCount,
       uncertain_count: uncertainCount,

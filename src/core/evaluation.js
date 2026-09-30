@@ -178,6 +178,63 @@ class EvaluationEngine {
         name: 'TC-13: System fail-open on runtime exception',
         charge: { line_id: 'SYN-13', org_id: testOrgId, unit_id: 'UNIT-9015', charge_type: 'inbound_defect_fee', amount_usd: 1.00, posted_date: '2026-07-01' },
         expected_verdict: DecisionVerdict.UNCERTAIN
+      },
+      {
+        name: 'TC-14: Definitely expired -> NO_CLAIM (prep PASS but outside 90-day lookback window)',
+        charge: { line_id: 'SYN-14', org_id: testOrgId, unit_id: 'UNIT-9016', charge_type: 'inbound_defect_fee', amount_usd: 2.00, posted_date: '2025-01-01' },
+        prep: { record_id: 'SYN-PRP-14', org_id: testOrgId, unit_id: 'UNIT-9016', polybag_present_sealed: 'yes', suffocation_warning: 'legible', fnsku_label_placement: 'flat', original_barcode_covered: 'yes', handling_marks: 'all_present', operator_id: 'op_test', captured_at: '2024-12-20T10:00:00Z', photo_refs: 'photo.jpg', work_order_id: 'WO-1' },
+        expected_verdict: DecisionVerdict.NO_CLAIM
+      },
+      {
+        name: 'TC-15: Missing authoritative rule (unsupported charge type)',
+        charge: { line_id: 'SYN-15', org_id: testOrgId, unit_id: 'UNIT-9017', charge_type: 'unregistered_freight_concession', amount_usd: 12.50, posted_date: '2026-07-01' },
+        expected_verdict: DecisionVerdict.UNCERTAIN
+      },
+      {
+        name: 'TC-16: Ambiguous unit match (multiple units share identical FNSKU)',
+        charge: { line_id: 'SYN-16', org_id: testOrgId, unit_id: '', fnsku: 'X00AMBIG_UNIT', charge_type: 'inbound_defect_fee', amount_usd: 1.50, posted_date: '2026-07-01' },
+        unit1: { unit_id: 'UNIT-9018', org_id: testOrgId, fnsku: 'X00AMBIG_UNIT' },
+        unit2: { unit_id: 'UNIT-9019', org_id: testOrgId, fnsku: 'X00AMBIG_UNIT' },
+        expected_verdict: DecisionVerdict.UNCERTAIN
+      },
+      {
+        name: 'TC-17: Duplicate/ambiguous SKU (multiple units share single SKU)',
+        charge: { line_id: 'SYN-17', org_id: testOrgId, unit_id: '', sku: 'SKU-AMBIG-DUP', charge_type: 'inbound_defect_fee', amount_usd: 1.00, posted_date: '2026-07-01' },
+        unit1: { unit_id: 'UNIT-9020', org_id: testOrgId, sku: 'SKU-AMBIG-DUP' },
+        unit2: { unit_id: 'UNIT-9021', org_id: testOrgId, sku: 'SKU-AMBIG-DUP' },
+        expected_verdict: DecisionVerdict.UNCERTAIN
+      },
+      {
+        name: 'TC-18: Definitely eligible -> continue to policy (prep PASS within 90-day window -> CLAIM)',
+        charge: { line_id: 'SYN-18', org_id: testOrgId, unit_id: 'UNIT-9022', charge_type: 'inbound_defect_fee', amount_usd: 2.50, posted_date: '2026-07-15' },
+        prep: { record_id: 'SYN-PRP-18', org_id: testOrgId, unit_id: 'UNIT-9022', polybag_present_sealed: 'yes', suffocation_warning: 'legible', fnsku_label_placement: 'flat', original_barcode_covered: 'yes', handling_marks: 'all_present', operator_id: 'op_test', captured_at: '2026-07-10T10:00:00Z', photo_refs: 'photo.jpg', work_order_id: 'WO-1' },
+        expected_verdict: DecisionVerdict.CLAIM
+      },
+      {
+        name: 'TC-19: Definitely ineligible -> NO_CLAIM (prep PASS but account disqualified)',
+        charge: { line_id: 'SYN-19', org_id: testOrgId, unit_id: 'UNIT-9023', charge_type: 'inbound_defect_fee', amount_usd: 2.00, posted_date: '2026-07-15', is_ineligible: true, ineligible_reason: 'Account not in good standing for placement fee disputes' },
+        prep: { record_id: 'SYN-PRP-19', org_id: testOrgId, unit_id: 'UNIT-9023', polybag_present_sealed: 'yes', suffocation_warning: 'legible', fnsku_label_placement: 'flat', original_barcode_covered: 'yes', handling_marks: 'all_present', operator_id: 'op_test', captured_at: '2026-07-10T10:00:00Z', photo_refs: 'photo.jpg', work_order_id: 'WO-1' },
+        expected_verdict: DecisionVerdict.NO_CLAIM
+      },
+      {
+        name: 'TC-20: Unavailable policy source -> UNCERTAIN (authoritative policy source offline)',
+        charge: { line_id: 'SYN-20', org_id: testOrgId, unit_id: 'UNIT-9024', charge_type: 'damaged_in_warehouse', amount_usd: 14.00, posted_date: '2026-07-15' },
+        rcv: { record_id: 'SYN-RCV-20', org_id: testOrgId, unit_id: 'UNIT-9024', carton_damage: 'none', unit_damage: 'none', operator_id: 'op_test', captured_at: '2026-07-10T10:00:00Z', photo_refs: 'photo.jpg' },
+        setup: (engine) => engine.policyRegistry.setSourceAvailable('damaged_in_warehouse', false),
+        teardown: (engine) => engine.policyRegistry.setSourceAvailable('damaged_in_warehouse', false),
+        expected_verdict: DecisionVerdict.UNCERTAIN
+      },
+      {
+        name: 'TC-21: Missing eligibility date -> UNCERTAIN (missing charge posted date)',
+        charge: { line_id: 'SYN-21', org_id: testOrgId, unit_id: 'UNIT-9025', charge_type: 'inbound_defect_fee', amount_usd: 2.00, posted_date: '', missing_dates: true },
+        prep: { record_id: 'SYN-PRP-21', org_id: testOrgId, unit_id: 'UNIT-9025', polybag_present_sealed: 'yes', suffocation_warning: 'legible', fnsku_label_placement: 'flat', original_barcode_covered: 'yes', handling_marks: 'all_present', operator_id: 'op_test', captured_at: '2026-07-10T10:00:00Z', photo_refs: 'photo.jpg', work_order_id: 'WO-1' },
+        expected_verdict: DecisionVerdict.UNCERTAIN
+      },
+      {
+        name: 'TC-22: Conflicting dates -> UNCERTAIN (conflicting operational chronology)',
+        charge: { line_id: 'SYN-22', org_id: testOrgId, unit_id: 'UNIT-9026', charge_type: 'inbound_defect_fee', amount_usd: 2.00, posted_date: '2026-07-01', conflicting_dates: true },
+        prep: { record_id: 'SYN-PRP-22', org_id: testOrgId, unit_id: 'UNIT-9026', polybag_present_sealed: 'yes', suffocation_warning: 'legible', fnsku_label_placement: 'flat', original_barcode_covered: 'yes', handling_marks: 'all_present', operator_id: 'op_test', captured_at: '2026-07-10T10:00:00Z', photo_refs: 'photo.jpg', work_order_id: 'WO-1' },
+        expected_verdict: DecisionVerdict.UNCERTAIN
       }
     ];
 
@@ -208,7 +265,10 @@ class EvaluationEngine {
       const Matcher = require('./matcher');
       const matchResult = Matcher.matchChargeToUnit(normCharge, tenantRepo);
       const graph = EvidenceGraph.buildForUnit(matchResult.matched_unit_id, tenantRepo);
+      
+      if (typeof tc.setup === 'function') tc.setup(engine);
       const decision = engine.evaluate(normCharge, matchResult, graph, tenantRepo);
+      if (typeof tc.teardown === 'function') tc.teardown(engine);
 
       const passed = decision.verdict === tc.expected_verdict;
       results.push({
@@ -222,7 +282,7 @@ class EvaluationEngine {
 
     const totalPassed = results.filter(r => r.passed).length;
     return {
-      suite: 'Synthetic Edge Case Benchmark (13 Scenarios)',
+      suite: `Synthetic Edge Case Benchmark (${results.length} Scenarios)`,
       total_cases: results.length,
       passed_cases: totalPassed,
       failed_cases: results.length - totalPassed,

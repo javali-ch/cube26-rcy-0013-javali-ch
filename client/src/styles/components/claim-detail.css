@@ -1,0 +1,701 @@
+/**
+ * REMA — Recovery Manager
+ * Component: Flagship Claim Detail View & Visual Evidence Traceability Stepper
+ */
+
+.claim-detail-card {
+  background: var(--rema-background);
+  border: 1px solid var(--rema-border);
+  border-radius: var(--rema-radius-lg);
+  padding: 2.25rem;
+  box-shadow: var(--rema-shadow-card);
+  margin-bottom: 2rem;
+}
+
+.claim-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--rema-border);
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
+.claim-detail-title-group h2 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--rema-primary-dark);
+  letter-spacing: -0.03em;
+}
+
+.claim-detail-title-group p {
+  color: var(--rema-muted);
+  font-size: 0.95rem;
+  margin-top: 0.2rem;
+}
+
+/* Rationale Callout */
+.rationale-callout {
+  background: var(--rema-surface-subtle);
+  border-left: 4px solid var(--rema-primary);
+  border-radius: 0 var(--rema-radius-md) var(--rema-radius-md) 0;
+  padding: 1.25rem 1.6rem;
+  margin-bottom: 2.25rem;
+}
+
+.rationale-callout h4 {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--rema-primary);
+  margin-bottom: 0.35rem;
+}
+
+.rationale-callout p {
+  font-size: 1.05rem;
+  color: var(--rema-text);
+  line-height: 1.55;
+  font-weight: 500;
+}
+
+/* Visual Evidence Lineage Stepper */
+.lineage-stepper {
+  margin: 2.25rem 0;
+}
+
+.stepper-header {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--rema-muted);
+  margin-bottom: 1rem;
+}
+
+.stepper-track {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--rema-surface);
+  border: 1px solid var(--rema-border);
+  border-radius: var(--rema-radius-md);
+  padding: 1.25rem 1rem;
+  overflow-x: auto;
+}
+
+.step-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-width: 135px;
+  flex: 1;
+}
+
+.step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--rema-surface-subtle);
+  border: 2px solid var(--rema-primary);
+  color: var(--rema-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.step-node.completed .step-circle {
+  background: var(--rema-primary);
+  color: #FFFFFF;
+}
+
+.step-name {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--rema-primary-dark);
+}
+
+.step-desc {
+  font-size: 0.74rem;
+  color: var(--rema-muted);
+  margin-top: 0.2rem;
+  max-width: 125px;
+  word-break: break-word;
+}
+
+.step-arrow {
+  color: var(--rema-muted);
+  font-weight: 700;
+  font-size: 1.15rem;
+  padding: 0 0.5rem;
+}
+
+/* Categorical Assessment Health Grid */
+.assessment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin: 2rem 0;
+}
+
+.assessment-box {
+  border: 1px solid var(--rema-border);
+  border-radius: var(--rema-radius-md);
+  padding: 1.15rem;
+  background: var(--rema-surface);
+}
+
+.assessment-box h5 {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--rema-muted);
+  margin-bottom: 0.4rem;
+}
+
+.assessment-box .assessment-val {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--rema-primary-dark);
+}
+
+.assessment-box p {
+  font-size: 0.78rem;
+  color: var(--rema-muted);
+  margin-top: 0.35rem;
+  line-height: 1.4;
+}
+
+/* Raw Operational Records Accordion */
+.raw-accordion {
+  border: 1px solid var(--rema-border);
+  border-radius: var(--rema-radius-md);
+  margin-top: 0.75rem;
+  overflow: hidden;
+  background: var(--rema-background);
+}
+
+.raw-accordion-header {
+  background: var(--rema-surface);
+  padding: 0.95rem 1.25rem;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--rema-primary-dark);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+  transition: background 0.15s ease;
+}
+
+.raw-accordion-header:hover {
+  background: var(--rema-surface-hover);
+}
+
+.raw-accordion-content {
+  display: none;
+  padding: 1.25rem;
+  background: #1B211A;
+  color: #A9D19E;
+  font-family: var(--rema-font-mono);
+  font-size: 0.8rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  line-height: 1.45;
+}
+
+.raw-accordion.open .raw-accordion-content {
+  display: block;
+}
+
+/* Audit Timeline Trace */
+.audit-timeline {
+  margin-top: 1rem;
+}
+
+.audit-item {
+  border-left: 2px solid var(--rema-primary);
+  padding-left: 1.15rem;
+  padding-bottom: 0.85rem;
+  margin-bottom: 0.5rem;
+  position: relative;
+}
+
+.audit-item::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--rema-primary);
+}
+
+.audit-meta {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--rema-muted);
+}
+
+.audit-details {
+  font-size: 0.83rem;
+  color: var(--rema-text);
+  margin-top: 0.2rem;
+  font-family: var(--rema-font-mono);
+}
+
+/* Authoritative Rule & Eligibility Detail Cards */
+.policy-rule-card {
+  background: var(--rema-surface);
+  border: 1px solid var(--rema-border);
+  border-radius: var(--rema-radius-md);
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.policy-rule-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--rema-border-subtle);
+  padding-bottom: 0.75rem;
+}
+
+.policy-rule-header h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--rema-primary-dark);
+  margin: 0;
+}
+
+.badge-reason-code {
+  display: inline-block;
+  background: var(--rema-surface-subtle);
+  border: 1px solid var(--rema-primary-light);
+  color: var(--rema-primary-dark);
+  font-family: var(--rema-font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--rema-radius-sm);
+}
+
+.condition-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+}
+
+.condition-list li {
+  font-size: 0.88rem;
+  color: var(--rema-text);
+  padding: 0.35rem 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.condition-icon {
+  font-weight: 700;
+  color: var(--rema-primary);
+}
+
+.condition-icon.fail {
+  color: #C62828;
+}
+
+.link-authoritative {
+  color: var(--rema-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: underline;
+  word-break: break-all;
+}
+
+.link-authoritative:hover {
+  color: var(--rema-primary-dark);
+}
+
+/* Operational Recovery Actions Toolbar */
+.claim-actions-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--rema-surface);
+  border: 1px solid var(--rema-border);
+  border-radius: var(--rema-radius-md);
+  margin: 1.75rem 0;
+}
+
+.btn-action-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--rema-primary);
+  color: #FFFFFF;
+  border: 1px solid var(--rema-primary-dark);
+  border-radius: var(--rema-radius-sm);
+  padding: 0.65rem 1.25rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-action-primary:hover {
+  background: var(--rema-primary-dark);
+}
+
+.btn-action-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--rema-background);
+  color: var(--rema-primary-dark);
+  border: 1px solid var(--rema-border);
+  border-radius: var(--rema-radius-sm);
+  padding: 0.65rem 1.15rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-action-secondary:hover {
+  background: var(--rema-surface-hover);
+  border-color: var(--rema-primary);
+}
+
+.btn-action-secondary:disabled,
+.btn-action-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Toast Notification Banner */
+.action-notification-toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.25rem;
+  margin-bottom: 1.25rem;
+  border-radius: var(--rema-radius-sm);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.action-notification-toast.success {
+  background: #E8F5E9;
+  border: 1px solid #A5D6A7;
+  color: #1B5E20;
+}
+
+.action-notification-toast.info {
+  background: #E3F2FD;
+  border: 1px solid #90CAF9;
+  color: #0D47A1;
+}
+
+.action-notification-toast.warning {
+  background: #FFF8E1;
+  border: 1px solid #FFE082;
+  color: #F57F17;
+}
+
+/* Additional Evidence (Optional) Section */
+.additional-evidence-section {
+  background: var(--rema-surface);
+  border: 1px solid var(--rema-border);
+  border-radius: var(--rema-radius-md);
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.additional-evidence-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.additional-evidence-header h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--rema-primary-dark);
+  margin: 0 0 0.25rem 0;
+}
+
+.additional-evidence-subtext {
+  font-size: 0.88rem;
+  color: var(--rema-muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.additional-evidence-note {
+  font-size: 0.8rem;
+  color: var(--rema-muted);
+  font-style: italic;
+  margin-top: 0.4rem;
+}
+
+.btn-attach-evidence {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--rema-background);
+  color: var(--rema-primary);
+  border: 1px solid var(--rema-primary);
+  border-radius: var(--rema-radius-sm);
+  padding: 0.55rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-attach-evidence:hover {
+  background: var(--rema-primary);
+  color: #FFFFFF;
+}
+
+.manual-evidence-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 1.25rem;
+}
+
+.manual-evidence-card {
+  background: var(--rema-background);
+  border: 1px solid var(--rema-border);
+  border-left: 4px solid var(--rema-primary);
+  border-radius: var(--rema-radius-sm);
+  padding: 1rem 1.25rem;
+}
+
+.manual-evidence-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.badge-manual-source {
+  background: #E8F5E9;
+  border: 1px solid #A5D6A7;
+  color: #1B5E20;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--rema-radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.manual-evidence-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--rema-primary-dark);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.manual-evidence-meta {
+  font-size: 0.78rem;
+  color: var(--rema-muted);
+  margin-top: 0.25rem;
+}
+
+.manual-evidence-desc {
+  font-size: 0.85rem;
+  color: var(--rema-text);
+  margin-top: 0.5rem;
+  line-height: 1.45;
+  background: var(--rema-surface-subtle);
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--rema-radius-sm);
+}
+
+/* Modal Dialog Styles */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: var(--rema-background);
+  border: 1px solid var(--rema-border);
+  border-radius: var(--rema-radius-lg);
+  max-width: 520px;
+  width: 100%;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  animation: modalFadeIn 0.18s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--rema-border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.modal-header h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--rema-primary-dark);
+  margin: 0 0 0.25rem 0;
+}
+
+.modal-header p {
+  font-size: 0.82rem;
+  color: var(--rema-muted);
+  margin: 0;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  color: var(--rema-muted);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+.modal-close-btn:hover {
+  color: var(--rema-text);
+}
+
+.modal-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.modal-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.modal-form-group label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--rema-primary-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.modal-form-group input[type="file"] {
+  font-size: 0.85rem;
+  color: var(--rema-text);
+  border: 1px dashed var(--rema-border);
+  padding: 0.85rem;
+  border-radius: var(--rema-radius-sm);
+  background: var(--rema-surface);
+  cursor: pointer;
+}
+
+.modal-form-group textarea {
+  font-size: 0.88rem;
+  color: var(--rema-text);
+  border: 1px solid var(--rema-border);
+  padding: 0.75rem;
+  border-radius: var(--rema-radius-sm);
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.modal-form-group textarea:focus {
+  outline: none;
+  border-color: var(--rema-primary);
+}
+
+.modal-footer {
+  padding: 1.15rem 1.5rem;
+  border-top: 1px solid var(--rema-border);
+  background: var(--rema-surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.export-menu-container {
+  position: relative;
+  display: inline-block;
+}
+
+.export-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.35rem;
+  background: var(--rema-background);
+  border: 1px solid var(--rema-border);
+  border-radius: var(--rema-radius-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 180px;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.export-dropdown-item {
+  width: 100%;
+  text-align: left;
+  padding: 0.65rem 1rem;
+  background: none;
+  border: none;
+  font-size: 0.85rem;
+  color: var(--rema-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background 0.15s ease;
+}
+
+.export-dropdown-item:hover {
+  background: var(--rema-surface-hover);
+  color: var(--rema-primary-dark);
+}
+
+
